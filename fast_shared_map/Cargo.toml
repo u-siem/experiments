@@ -1,0 +1,20 @@
+[package]
+name = "fast_shared_map"
+version = "0.0.1"
+authors = ["Samuel Garcés <samuel.garces@protonmail.com>"]
+license = "MIT"
+description = "Testing fast shared map"
+repository = "https://github.com/u-siem/experiments"
+keywords = ["SIEM", "security", "logs","opnsense","firewall"]
+categories = ["security"]
+edition = "2018"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+crossbeam-channel = { version = "0.5" }
+u-siem = {version = "0.0"}
+chrono = "0.4"
+arc-swap = "1.2"
+crossbeam-utils = "0.8.1"
+rand = "0.8.3"
