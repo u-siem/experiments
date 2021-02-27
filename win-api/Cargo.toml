@@ -1,0 +1,13 @@
+[package]
+name = "win_api"
+version = "0.0.1"
+authors = ["Samuel Garcés <samuel.garces@protonmail.com>"]
+license = "MIT"
+description = "Testing WindowsAPI"
+repository = "https://github.com/u-siem/experiments"
+keywords = ["SIEM", "security", "logs","windows"]
+categories = ["security"]
+edition = "2018"
+
+[dependencies]
+bindings = { package="event_bindings", path = "bindings" }

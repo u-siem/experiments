@@ -1,0 +1,16 @@
+[package]
+name = "event_bindings"
+version = "0.3.1"
+authors = ["Samuel Garcés <samuel.garces@protonmail.com>"]
+license = "MIT"
+description = "Testing WindowsAPI"
+repository = "https://github.com/u-siem/experiments"
+keywords = ["SIEM", "security", "logs","windows"]
+categories = ["security"]
+edition = "2018"
+
+[dependencies]
+windows = "0.3.1"
+
+[build-dependencies]
+windows = "0.3.1"
