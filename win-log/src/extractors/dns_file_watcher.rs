@@ -1,4 +1,4 @@
-use async_std::fs::{File};
+use async_std::fs::{File, OpenOptions};
 use async_std::fs;
 use async_std::prelude::*;
 
@@ -27,7 +27,7 @@ pub struct LogWatcherConfig {
 impl DnsLogWatcher {
 
     pub async fn register(log_filename : &str, rotation_size : u64, config : Option<LogWatcherConfig>) -> Result<DnsLogWatcher, io::Error> {
-        let f = File::open(&log_filename).await?;
+        let f = OpenOptions::new().read(true).write(true).open(&log_filename).await?;
         let metadata = f.metadata().await?;
         let mut reader = BufReader::new(f);
         match config {
@@ -39,7 +39,7 @@ impl DnsLogWatcher {
                         principal_file : log_filename.to_string(),
                         reader,
                         rotation_size,
-                        force_rotation : std::cmp::max((rotation_size as f64 * 0.9) as u64, rotation_size - 10000u64),
+                        force_rotation : std::cmp::max((rotation_size as f64 * 0.9) as u64, std::cmp::max(0i64, rotation_size as i64 - 10000i64) as u64),
                         size : metadata.len(),
                         pos : config.pos
                     })
@@ -49,7 +49,7 @@ impl DnsLogWatcher {
                         principal_file : log_filename.to_string(),
                         reader,
                         rotation_size,
-                        force_rotation : std::cmp::max((rotation_size as f64 * 0.9) as u64, rotation_size - 10000u64),
+                        force_rotation : std::cmp::max((rotation_size as f64 * 0.9) as u64, std::cmp::max(0i64, rotation_size as i64 - 10000i64) as u64),
                         size : metadata.len(),
                         pos : 0
                     })
@@ -61,7 +61,7 @@ impl DnsLogWatcher {
                     principal_file : log_filename.to_string(),
                     reader,
                     rotation_size,
-                    force_rotation : std::cmp::max((rotation_size as f64 * 0.9) as u64, rotation_size - 10000u64),
+                    force_rotation : std::cmp::max((rotation_size as f64 * 0.9) as u64, std::cmp::max(0i64, rotation_size as i64 - 10000i64) as u64),
                     size : metadata.len(),
                     pos : 0
                 })
@@ -71,7 +71,7 @@ impl DnsLogWatcher {
 
     pub async fn save_config(&mut self) -> Result<LogWatcherConfig, io::Error>
     {
-        let file = File::open(&self.principal_file).await?;
+        let file = OpenOptions::new().read(true).write(true).open(&self.principal_file).await?;
         let metadata = file.metadata().await?;
         Ok(LogWatcherConfig {
             pos : self.pos,
@@ -82,7 +82,7 @@ impl DnsLogWatcher {
     pub async fn resync_file(&mut self) -> Result<(), io::Error>
     {
         println!("resync_file");
-        let file = File::open(&self.principal_file).await?;
+        let file = OpenOptions::new().read(true).write(true).open(&self.principal_file).await?;
         let metadata = file.metadata().await?;
         self.reader = BufReader::new(file);
         self.reader.seek(SeekFrom::Start(self.pos)).await?;
@@ -93,7 +93,7 @@ impl DnsLogWatcher {
     pub async fn force_rotation(&mut self) -> Result<(), io::Error>
     {
         println!("Forced rotation");
-        let file = File::open(&self.principal_file).await?;
+        let file = OpenOptions::new().read(true).write(true).open(&self.principal_file).await?;
         file.set_len(0).await?;
         self.reader = BufReader::new(file);
         self.reader.seek(SeekFrom::Start(0)).await?;
@@ -114,11 +114,11 @@ impl DnsLogWatcher {
                     println!("{}", log_line);
                 }
                 line.clear();
+            }else{
                 if self.pos > self.rotation_size {
                     self.force_rotation().await?;
                 }
-            }else{
-                async_std::task::sleep(Duration::from_millis(1000)).await;
+                async_std::task::sleep(Duration::from_millis(5000)).await;
                 self.resync_file().await?;
             }
         }
@@ -128,7 +128,7 @@ impl DnsLogWatcher {
 #[test]
 fn test_log_watch() {
     async_std::task::block_on(async {
-        let mut watcher = DnsLogWatcher::register("C:\\dns\\dns.log", 100_000, None).await.unwrap();
+        let mut watcher = DnsLogWatcher::register("C:\\dns\\dns.log", 2_000, None).await.unwrap();
         watcher.watch().await.unwrap();
         let config = watcher.save_config().await.unwrap();
     });
