@@ -1,0 +1,33 @@
+[package]
+name = "win_log"
+version = "0.0.1"
+authors = ["Samuel Garcés <samuel.garces@protonmail.com>"]
+license = "MIT"
+description = "Testing WindowsAPI"
+repository = "https://github.com/u-siem/experiments"
+keywords = ["SIEM", "security", "logs","windows"]
+categories = ["security"]
+edition = "2018"
+
+[dependencies]
+serde_json = "1.0"
+serde-xml-rs = "0.5.1"
+serde = { version = "1.0", features = ["derive"] }
+async-std = "1.10"
+lazy_static = "1.4"
+u-siem = {version = "0.0"}
+u-siem-elasticsearch = {version = "0.0"}
+u-siem-windns = {version = "0.0"}
+
+[dependencies.windows]
+version = "0.29.0"
+features = [
+    "alloc",
+    "Data_Xml_Dom",
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_System_Threading",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_System_EventLog",
+    "Win32_System_Registry"
+]
