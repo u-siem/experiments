@@ -1,26 +1,68 @@
+use std::sync::atomic::AtomicBool;
+
 use serde::{Serialize, Deserialize};
 use windows::Win32::System::Registry;
 use windows::Win32::Foundation;
+use std::sync::Arc;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct EventBookmark {
-    pub a : String
+    pub xml : String
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ListenerConfiguration {
+pub struct EvtListenerConfiguration {
     pub bookmark : Option<EventBookmark>,
     pub query : String,
-    pub channel : String
+    pub channel : String,
+    #[serde(skip_serializing, default = "default_stopper")]
+    pub stop : Arc<AtomicBool>
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FileListenerConfiguration {
+    /// Position in the file
+    pub position : usize,
+    /// Size of the file as to detect rotations
+    pub size : usize,
+    #[serde(skip_serializing, default = "default_stopper")]
+    pub stop : Arc<AtomicBool>
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum ListenerConfiguration {
+    Event(EvtListenerConfiguration),
+    File(FileListenerConfiguration)
+
+}
+impl Clone for EvtListenerConfiguration {
+    fn clone(&self) -> Self {
+        EvtListenerConfiguration {
+            bookmark : self.bookmark.clone(),
+            query : self.query.to_string(),
+            channel : self.channel.to_string(),
+            stop : Arc::new(AtomicBool::new(false))
+        }
+    }
+}
+fn default_stopper() -> Arc<AtomicBool> {
+    Arc::new(AtomicBool::new(false))
+}
+impl EvtListenerConfiguration {
+    pub fn get_stop_listener(&self) -> Arc<AtomicBool> {
+        Arc::clone(&self.stop)
+    }
+}
 
 #[derive(Debug)]
 pub enum ULoggerError {
     InvalidPath(String),
-    InvalidConfigFile(String)
+    InvalidConfigFile(String),
+    ErrorProcessingEvent(String),
+    EventChannelNotFound(String),
+    EventQueryInvalid(String),
+    InvalidBookmark(String)
 }
-
 #[derive(Debug)]
 pub enum RegistryError {
     NotExists,
